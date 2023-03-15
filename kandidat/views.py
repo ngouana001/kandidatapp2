@@ -135,7 +135,6 @@ def kandidat_delete_all(request):
 
 
 def register(request):
-
     form =  RegisterForm()
     if request.method == 'POST':
         form = RegisterForm(request.POST)
