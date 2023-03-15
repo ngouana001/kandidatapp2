@@ -25,6 +25,7 @@ pipeline {
                   docker rm -f $IMAGE_NAME
                   docker run --name $IMAGE_NAME -d -p $HOST_PORT:80 ${DOCKERHUB_ID}/$IMAGE_NAME:$IMAGE_TAG
                   sleep 5
+                  
               '''
              }
           }
