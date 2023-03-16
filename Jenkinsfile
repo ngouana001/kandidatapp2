@@ -1,7 +1,6 @@
 pipeline {
     environment {
         IMAGE_NAME = "kandidatapp2"
-        IMAGE_TAG = "R01"
         DOCKERHUB_ID = "royem001"
         DOCKERHUB_PASSWORD = credentials('dockerhub_password')
         HOST_IP = "${HOST_IP_PARAM}"
@@ -13,7 +12,10 @@ pipeline {
            agent any
            steps {
               script {
-                sh 'docker build -t ${DOCKERHUB_ID}/$IMAGE_NAME:$IMAGE_TAG .'
+                sh '''
+                  echo "BUILD"
+                  docker build -t ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT} .
+                  '''
               }
            }
        }
@@ -23,13 +25,38 @@ pipeline {
             script {
               sh '''
                   docker rm -f $IMAGE_NAME
-                  docker run --name $IMAGE_NAME -d -p $HOST_PORT:80 ${DOCKERHUB_ID}/$IMAGE_NAME:$IMAGE_TAG
+                  docker run --name $IMAGE_NAME -d -p $HOST_PORT:80 ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT}
                   sleep 5
               '''
              }
           }
        }
-       stage('Test image') {
+
+
+
+       stage('Test unitaires Application') {
+           agent any
+           steps {
+              script {
+                     switch(GIT_BRANCH) {
+                        case "origin/Login": 
+                             echo "CODE DE TEST du login";
+                            break
+                        case "origin/Logout":
+                            echo "CODE DE TEST du logout";
+                            break
+                        case "origin/Register":
+                            echo "CODE DE TEST du Register";
+                            break
+                        case "origin/master":
+                            echo "CODE DE TEST du master";
+                            break                        
+                    } 
+              }
+           }
+       }
+               
+       stage('Tests fonctionnels') {
            agent any
            steps {
               script {
@@ -51,23 +78,47 @@ pipeline {
           }
       }
 
-      stage ('Anmeldung und Push-Image auf Docker-Hub') {
+      stage('Anmeldung und Push-Image auf Docker-Hub') {
           agent any
           steps {
-             script {
-               sh '''
-                   echo $DOCKERHUB_PASSWORD | docker login -u ${DOCKERHUB_ID} --password-stdin
-                   docker push ${DOCKERHUB_ID}/$IMAGE_NAME:$IMAGE_TAG
-               '''
-             }
-          }
-      }
+              script {
+                env.branche="test"
+                    sh '''
+                        echo $DOCKERHUB_PASSWORD | docker login -u ${DOCKERHUB_ID} --password-stdin
+                    '''
+                    switch(GIT_BRANCH) {
+                        case "origin/Login": 
+                            echo "BRANCHE LOGIN";
+                            env.branche="login";
+                            break
+                        case "origin/Logout":
+                            env.branche="logout";
+                            break
+                        case "origin/Register":
+                            env.branche="register";
+                            break
+                        case "origin/master":
+                            env.branche="master";
+                            break                        
+                    } 
+                    sh '''
+                        echo "Push image on dockerhub" 
+                        docker tag ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT} ${DOCKERHUB_ID}/${IMAGE_NAME}:${branche}-${GIT_COMMIT}
+                        docker push ${DOCKERHUB_ID}/${IMAGE_NAME}:${branche}-${GIT_COMMIT}
+                        echo $tag_name
+                    '''                                   
+                    if (tag_name  == 'v*') 
+                        {
+                            sh '''
+                                echo "Production de la nouvelle release ${TAG_NAME} "
+                                docker tag ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT} ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME}
+                                docker push ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME} 
 
-    }  
-    post {
-       success {
-         slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'  ")
-         }
-      failure {
-            slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'  ")
+                            '''
+                        }
+                }
+           }
+       }
+
+    }   
 }
