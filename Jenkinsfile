@@ -32,8 +32,6 @@ pipeline {
           }
        }
 
-
-
        stage('Test unitaires Application') {
            agent any
            steps {
