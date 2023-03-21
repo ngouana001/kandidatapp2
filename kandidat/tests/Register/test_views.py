@@ -6,7 +6,6 @@ import pytest
 
 @pytest.mark.parametrize('param', [
     ('register'),
-
 ])
 def test_render_views(client, param):
     temp_url = urls.reverse(param)
