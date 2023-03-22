@@ -13,8 +13,8 @@ def test_render_views(client, param):
     resp = client.get(temp_url)
     assert resp.status_code == 302 or resp.status_code == 200
 
-    @pytest.mark.django_db
-    def test_kandidat_register(client, kandidat_data):
+@pytest.mark.django_db
+def test_kandidat_register(client, kandidat_data):
         user_data = {"username": kandidat_data.get('username'),
                      "password": kandidat_data.get('password'), 'confirm': kandidat_data.get('password')}
 

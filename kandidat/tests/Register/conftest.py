@@ -1,6 +1,4 @@
 import pytest
-from kandidat.models import Kandidat
-from django.contrib.auth import get_user_model
 
 
 
