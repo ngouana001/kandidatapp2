@@ -34,29 +34,29 @@ pipeline {
 
 
 
-       stage('Test unitaires Application') {
+       stage('unit-Tests Application') {
            agent any
            steps {
               script {
                      switch(GIT_BRANCH) {
                         case "origin/Login": 
-                             echo "CODE DE TEST du login";
+                             echo " TEST login";
                             break
                         case "origin/Logout":
-                            echo "CODE DE TEST du logout";
+                            echo "TEST logout";
                             break
                         case "origin/Register":
-                            echo "CODE DE TEST du Register";
+                            echo "TEST Register";
                             break
                         case "origin/master":
-                            echo "CODE DE TEST du master";
+                            echo "TEST master";
                             break                        
                     } 
               }
            }
        }
                
-       stage('Tests fonctionnels') {
+       stage('funktionstests ') {
            agent any
            steps {
               script {
@@ -110,7 +110,7 @@ pipeline {
                     if (tag_name  == 'v*') 
                         {
                             sh '''
-                                echo "Production de la nouvelle release ${TAG_NAME} "
+                                echo "neus release ${TAG_NAME} "
                                 docker tag ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT} ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME}
                                 docker push ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME} 
 
