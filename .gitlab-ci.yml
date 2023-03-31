@@ -29,7 +29,7 @@ Test :
     - docker run -d -p 80:80 --name kandidatapp2 kandidatapp2
     - sleep 4
     - apk --no-cache add curl
-    -  curl http://docker/login | grep -i "Anmelden"
+    -  curl http://docker/kandidat-home | grep -i "Logout"
 
 Release:
 
