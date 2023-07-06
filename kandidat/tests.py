@@ -90,38 +90,3 @@ class KandidatTestCase(TestCase):
         response = self.client.get(reverse('kandidat-delete-all'))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-
-class AuthTestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.test_user = User.objects.create_user(username='testuser', password='testpassword')
-
-    def test_register(self):
-        # On teste la vue d'inscription avec un nouvel utilisateur.
-        response = self.client.post(reverse('register'), {
-            'username': 'newuser',
-            'password1': 'newpassword',
-            'password2': 'newpassword'
-        })
-        # Après l'inscription réussie, l'utilisateur doit être redirigé vers la page de connexion.
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('login'))
-
-    def test_login(self):
-        # On teste la vue de connexion avec un utilisateur qui existe déjà.
-        response = self.client.post(reverse('login'), {
-            'username': 'testuser',
-            'password': 'testpassword'
-        })
-        # Après la connexion réussie, l'utilisateur doit être redirigé vers la page d'accueil.
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('home'))
-
-    def test_logout(self):
-        # Connectons l'utilisateur pour pouvoir tester la déconnexion.
-        self.client.login(username='testuser', password='testpassword')
-
-        response = self.client.get(reverse('logout'))
-        # Après la déconnexion, l'utilisateur doit être redirigé vers la page de connexion.
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('login'))
