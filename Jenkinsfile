@@ -32,14 +32,28 @@ pipeline {
           }
        }
 
+<<<<<<< HEAD
 
 
        stage('Test unitaires Application') {
+=======
+<<<<<<< HEAD
+       stage('Test unitaires Application') {
+=======
+
+
+       stage('unit-Tests Application') {
+>>>>>>> 978e9f8b64a8ed8be9563ad00daedb053f385e5a
+>>>>>>> d174c46470581cdfd8b9772199f76f36ea55deda
            agent any
            steps {
               script {
                      switch(GIT_BRANCH) {
                         case "origin/Login": 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d174c46470581cdfd8b9772199f76f36ea55deda
                              echo "CODE DE TEST du login";
                             break
                         case "origin/Logout":
@@ -50,13 +64,36 @@ pipeline {
                             break
                         case "origin/master":
                             echo "CODE DE TEST du master";
+<<<<<<< HEAD
+=======
+=======
+                             echo " TEST login";
+                            break
+                        case "origin/Logout":
+                            echo "TEST logout";
+                            break
+                        case "origin/Register":
+                            echo "TEST Register";
+                            break
+                        case "origin/master":
+                            echo "TEST master";
+>>>>>>> 978e9f8b64a8ed8be9563ad00daedb053f385e5a
+>>>>>>> d174c46470581cdfd8b9772199f76f36ea55deda
                             break                        
                     } 
               }
            }
        }
                
+<<<<<<< HEAD
        stage('Tests fonctionnels') {
+=======
+<<<<<<< HEAD
+       stage('Tests fonctionnels') {
+=======
+       stage('funktionstests ') {
+>>>>>>> 978e9f8b64a8ed8be9563ad00daedb053f385e5a
+>>>>>>> d174c46470581cdfd8b9772199f76f36ea55deda
            agent any
            steps {
               script {
@@ -110,7 +147,15 @@ pipeline {
                     if (tag_name  == 'v*') 
                         {
                             sh '''
+<<<<<<< HEAD
                                 echo "Production de la nouvelle release ${TAG_NAME} "
+=======
+<<<<<<< HEAD
+                                echo "Production de la nouvelle release ${TAG_NAME} "
+=======
+                                echo "neus release ${TAG_NAME} "
+>>>>>>> 978e9f8b64a8ed8be9563ad00daedb053f385e5a
+>>>>>>> d174c46470581cdfd8b9772199f76f36ea55deda
                                 docker tag ${DOCKERHUB_ID}/$IMAGE_NAME:${GIT_COMMIT} ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME}
                                 docker push ${DOCKERHUB_ID}/${IMAGE_NAME}:${TAG_NAME} 
 

@@ -1,127 +1,113 @@
 from django.test import TestCase, Client
-from rest_framework import status
-from kandidat.models import Kandidat
-from django.utils import timezone
-import json
-from django.contrib.auth.models import User
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from kandidat.forms import RegisterForm
+from django.contrib.auth import get_user_model, authenticate, login
+from rest_framework.status import HTTP_200_OK,HTTP_302_FOUND
 
-# Ici, on crée une classe pour les tests qui hérite de TestCase. 
-# Cela nous donne accès à beaucoup de méthodes de test utiles.
-class KandidatTestCase(TestCase):
-    # La méthode setUp est exécutée avant chaque test. 
-    # Nous l'utilisons pour créer un client de test et deux objets Kandidat.
+class RegisterViewTest(TestCase):
     def setUp(self):
+        # Initialiser le client de test
         self.client = Client()
-        self.kandidat1 = Kandidat.objects.create(
-            Vorname="Kandidat1", 
-            Nachname="Nachname1", 
-            geschlecht="M", 
-            email="kandidat1@example.com", 
-            Nummer="1234567890", 
-            Beschreibung="Test Candidate 1", 
-            ist_erwachsene=True
-        )
-        self.kandidat2 = Kandidat.objects.create(
-            Vorname="Kandidat2", 
-            Nachname="Nachname2", 
-            geschlecht="F", 
-            email="kandidat2@example.com", 
-            Nummer="0987654321", 
-            Beschreibung="Test Candidate 2", 
-            ist_erwachsene=False
-        )
 
-    # Ici, on teste la vue kandidaten_list. 
-    # On utilise le client pour faire une requête GET, puis on vérifie le code de statut de la réponse.
-    def test_kandidaten_list(self):
-        response = self.client.get(reverse('kandidat-all', args=[self.kandidat1.id]))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # URL de la vue à tester
+        self.register_url = reverse('register')
 
-    # Test de la vue kandidaten_detail. 
-    # C'est très similaire au test précédent.
-    def test_kandidaten_detail(self):
-        response = self.client.get(reverse('kandidat-all', kwargs={'id': self.kandidat1.id}))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    # Ici, on teste la vue kandidat_add. 
-    # On crée une nouvelle instance de Kandidat en utilisant une requête POST. 
-    # On vérifie ensuite le code de statut de la réponse.
-    def test_kandidat_add(self):
+    def test_register_user(self):
+        # Créer des données de formulaire de test
         data = {
-            "Vorname": "New",
-            "Nachname": "Kandidat",
-            "geschlecht": "M",
-            "email": "newkandidat@example.com",
-            "Nummer": "1122334455",
-            "Beschreibung": "New Test Candidate",
-            "ist_erwachsene": True
+            'username': 'testuser',
+            'password': 'testpassword123',
+            'confirm': 'testpassword123',
         }
-        response = self.client.post(reverse('kandidat-add'), json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # Test de la vue kandidat_update. 
-    # On met à jour une instance de Kandidat existante avec une requête PUT, 
-    # puis on vérifie le code de statut de la réponse.
-    def test_kandidat_update(self):
+        # Envoyer une requête POST à la vue avec les données du formulaire
+        response = self.client.post(self.register_url, data)
+
+        # Vérifier que l'utilisateur a été créé
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+        # Vérifier que la vue redirige à la page d'accueil après une inscription réussie
+        self.assertRedirects(response, reverse('login'))
+
+    def test_register_user_with_password_mismatch(self):
+        # Créer des données de formulaire où le mot de passe et la confirmation ne correspondent pas
         data = {
-            "Vorname": "Updated",
-            "Nachname": "Kandidat",
-            "geschlecht": "F",
-            "email": "updatedkandidat@example.com",
-            "Nummer": "1122334455",
-            "Beschreibung": "Updated Test Candidate",
-            "ist_erwachsene": False
+            'username': 'testuser',
+            'password': 'testpassword123',
+            'confirm': 'wrongpassword',
         }
-        response = self.client.put(reverse('kandidat-update', kwargs={'id': self.kandidat1.id}), json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # Ici, on teste la vue kandidat_delete. 
-    # On supprime une instance de Kandidat avec une requête GET (en utilisant l'URL appropriée), 
-    # puis on vérifie le code de statut de la réponse.
-    def test_kandidat_delete(self):
-        response = self.client.get(reverse('kandidat-delete', kwargs={'id': self.kandidat1.id}))
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        # Envoyer une requête POST à la vue avec les données du formulaire
+        response = self.client.post(self.register_url, data)
 
-    # Test de la vue kandidat_delete_all. 
-    # On supprime toutes les instances de Kandidat avec une requête GET, 
-    # puis on vérifie le code de statut de la réponse.
-    def test_kandidat_delete_all(self):
-        response = self.client.get(reverse('kandidat-delete-all'))
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        # Vérifier que l'utilisateur n'a pas été créé
+        self.assertEqual(get_user_model().objects.count(), 0)
+
+        # Vérifier que la vue renvoie le bon template avec l'erreur
+        self.assertTemplateUsed(response, 'kandidat/register.html')
+        self.assertTrue(response.context['error'])
+
+################################################# ceci est la partie des tests du login
 
 
-# class AuthTestCase(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         self.test_user = User.objects.create_user(username='testuser', password='testpassword')
+class SigninViewTest(TestCase):
+    def setUp(self):
+        # Initialiser le client de test
+        self.client = Client()
 
-#     def test_register(self):
-#         # On teste la vue d'inscription avec un nouvel utilisateur.
-#         response = self.client.post(reverse('register'), {
-#             'username': 'newuser',
-#             'password1': 'newpassword',
-#             'password2': 'newpassword'
-#         })
-#         # Après l'inscription réussie, l'utilisateur doit être redirigé vers la page de connexion.
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, reverse('login'))
+        # URL de la vue à tester
+        self.signin_url = reverse('login')
 
-#     def test_login(self):
-#         # On teste la vue de connexion avec un utilisateur qui existe déjà.
-#         response = self.client.post(reverse('login'), {
-#             'username': 'testuser',
-#             'password': 'testpassword'
-#         })
-#         # Après la connexion réussie, l'utilisateur doit être redirigé vers la page d'accueil.
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, reverse('home'))
+        # Créer un utilisateur de test
+        self.testuser = get_user_model().objects.create(
+            username='testuser', password='testpassword123')
 
-#     def test_logout(self):
-#         # Connectons l'utilisateur pour pouvoir tester la déconnexion.
-#         self.client.login(username='testuser', password='testpassword')
+    def test_signin_user(self):
+        # Créer des données de formulaire de test
+        data = {
+            'username': 'testuser',
+            'password': 'testpassword123',
+        }
 
-#         response = self.client.get(reverse('logout'))
-#         # Après la déconnexion, l'utilisateur doit être redirigé vers la page de connexion.
-#         self.assertEqual(response.status_code, 302)
-#         self.assertRedirects(response, reverse('login'))
+        # Envoyer une requête POST à la vue avec les données du formulaire
+        response = self.client.post(self.signin_url, data)
+
+        # Vérifier que la vue redirige à la page d'accueil après une connexion réussie
+        self.assertEqual(response.status_code, HTTP_200_OK)
+
+    def test_signout_user(self):
+        # Connecter l'utilisateur de test
+        self.client.login(username='testuser', password='testpassword123')
+
+        # Vérifier que l'utilisateur est connecté
+        user = authenticate(username='testuser', password='testpassword123')
+
+        # URL de la vue à tester
+        signout_url = reverse('logout')
+
+        # Envoyer une requête GET à la vue de déconnexion
+        response = self.client.get(signout_url)
+
+        # Vérifier que la vue redirige à la page de connexion après la déconnexion
+        self.assertEqual(response.status_code, HTTP_302_FOUND)
+
+        # Vérifier que l'utilisateur est déconnecté
+        response = self.client.get(reverse('kandidat-home'))
+        self.assertEqual(response.status_code, HTTP_302_FOUND)
+
+    def test_signin_user_with_incorrect_password(self):
+        # Créer des données de formulaire où le mot de passe est incorrect
+        data = {
+            'username': 'testuser',
+            'password': 'wrongpassword',
+        }
+
+        # Envoyer une requête POST à la vue avec les données du formulaire
+        response = self.client.post(self.signin_url, data)
+
+        # Vérifier que la vue renvoie le bon template avec l'erreur
+        self.assertTemplateUsed(response, 'kandidat/login.html')
+
+    
