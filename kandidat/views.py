@@ -50,7 +50,6 @@ def kandidaten_detail(request, pk):
     if request.method == 'GET':
         kandidat_serializer = KandidatSerializer(kandidat)
         return JsonResponse(kandidat_serializer.data)
-
     elif request.method == 'PUT':
         kandidat_serializer = KandidatSerializer(kandidat,data=request.data)
         if kandidat_serializer.is_valid():
@@ -61,7 +60,6 @@ def kandidaten_detail(request, pk):
         kandidat.delete()
         return JsonResponse({'message': 'candidate was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(['GET'])
 def kandidaten_list_erwachsene(request):
     # GET alle erwachsenen Kandidaten
@@ -71,7 +69,6 @@ def kandidaten_list_erwachsene(request):
         return JsonResponse(kandidat_serializer.data, safe=False)
 @login_required(login_url='login')
 def home(request):
-
     return render(request,'kandidat/layout.html')
 @login_required(login_url='login')
 def kandidat_add(request):
@@ -81,7 +78,6 @@ def kandidat_add(request):
 def kandidat_update(request,id):
 
     kandidat = ""
-
     try:
         kandidat = Kandidat.objects.get(id=id)
     except Kandidat.DoesNotExist:
@@ -156,9 +152,9 @@ def signin(request):
 
 
 def register(request):
-    if request.user.is_authenticated:
-        return redirect("kandidat-home")
+
     form =  RegisterForm()
+
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         confirm = request.POST.get('confirm')

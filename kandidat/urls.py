@@ -3,6 +3,7 @@ from django.urls import path, re_path
 from kandidat.views import home, kandidat_add, kandidat_update, kandidat_all, kandidat_home, kandidat_delete, \
     kandidat_delete_all, signin, register
 
+
 urlpatterns = [
     re_path(r'^api/kandidaten$', views.kandidaten_list),
     re_path(r'^api/kandidaten/(?P<pk>[0-9]+)$', views.kandidaten_detail),
